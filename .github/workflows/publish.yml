@@ -108,6 +108,8 @@ jobs:
             quilt
 
       - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           # Create (or edit if exists)
