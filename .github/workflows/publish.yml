@@ -80,8 +80,7 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          ./gradlew --version
-          ./gradlew build -PcurrentTag="${CURRENT_TAG}" -PlastTag="${LAST_TAG}" --stacktrace
+            ./gradlew remapJar -PcurrentTag="${CURRENT_TAG}" -PlastTag="${LAST_TAG}" --stacktrace
 
       # ---- Optional: Publish to Modrinth via their action (recommended) ----
       # Requires: secrets.MODRINTH_TOKEN and you provide the correct fields below.
