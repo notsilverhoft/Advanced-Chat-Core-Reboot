@@ -1,7 +1,6 @@
 > [!IMPORTANT]
 > This library will be updated to major minecraft versions only in the future.
 
-
 # AdvancedChatCore
 
 This is the base mod of all AdvancedChat modules and features. This mod provides the necessary foundation and framework for AdvancedChat mod's to work.
@@ -70,3 +69,5 @@ Logo & Proofreading: Chronos22
 Libraries:
 - [MathParser](http://mathparser.org/)
 - [OwO](https://github.com/maowcraft/owo)
+
+For more help join the [Discord](https://discord.gg/WnaE3uZxDA)
