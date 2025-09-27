@@ -116,20 +116,22 @@ jobs:
           if gh release view "${CURRENT_TAG}" >/dev/null 2>&1; then
             echo "Release exists; editing title/notes..."
             gh release edit "${CURRENT_TAG}" \
-              --title "${{ github.repository }} ${{ env.CURRENT_TAG }}" \
+              --title "${{ github.event.repository.name }} ${{ env.CURRENT_TAG }} for ${{ vars.MINECRAFT_VERSION }}" \
               --notes-file CHANGELOG_GH.txt \
               --target "${GITHUB_SHA}" \
               ${{ steps.rel.outputs.prerelease_flag }}
           else
             echo "Creating release..."
             gh release create "${CURRENT_TAG}" \
-              --title "${{ github.repository }} ${{ env.CURRENT_TAG }}" \
+              --title "${{ github.event.repository.name }} ${{ env.CURRENT_TAG }} for ${{ vars.MINECRAFT_VERSION }}" \
               --notes-file CHANGELOG_GH.txt \
               --target "${GITHUB_SHA}" \
               ${{ steps.rel.outputs.prerelease_flag }}
           fi
 
       - name: Upload to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: gh release upload "${CURRENT_TAG}" "${{ steps.build.outputs.file }}" --clobber
 
       - name: Upload build artifacts (CI archive)
