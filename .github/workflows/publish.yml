@@ -99,7 +99,7 @@ jobs:
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
           project: ${{ vars.MODRINTH_PROJECT_ID }}
-          version: ${{ env.CURRENT_TAG }}
+          version: ${{ vars.MINECRAFT_VERSION }} - ${{ github.event.inputs.version }}
           changelog: ${{ steps.changelog.outputs.changelog }}
           game-versions: ${{ vars.MINECRAFT_VERSION }}
           files: ${{ steps.build.outputs.file }}
