@@ -31,11 +31,6 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Create tag for new version
-        run: |
-          git tag $CURRENT_TAG
-          git push origin $CURRENT_TAG
-
       - name: Compute release type vars
         id: rel
         run: |
@@ -54,6 +49,24 @@ jobs:
 
           echo "release_type=$RELEASE_TYPE" >> "$GITHUB_OUTPUT"
           echo "prerelease_flag=$PRERELEASE_FLAG" >> "$GITHUB_OUTPUT"
+
+      - name: Build with Gradle
+        id: build
+        run: |
+          ./gradlew remapJar -PcurrentTag="${CURRENT_TAG}" -PlastTag="${LAST_TAG}" --stacktrace
+          
+          # Pick first JAR and strip leading $PWD/
+          FILE=$(find build/libs -maxdepth 1 -type f -name '*.jar' | head -n1)
+          if [ -z "$FILE" ]; then
+          echo "No JARs found in build/libs" >&2
+          exit 1
+          fi
+          echo "file=$FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Create tag for new version
+        run: |
+          git tag $CURRENT_TAG
+          git push origin $CURRENT_TAG
 
       - name: Generate changelog (lines starting with '- ')
         id: changelog
@@ -78,19 +91,6 @@ jobs:
           cat CHANGELOG_GH.txt >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
-      - name: Build with Gradle
-        id: build
-        run: |
-            ./gradlew remapJar -PcurrentTag="${CURRENT_TAG}" -PlastTag="${LAST_TAG}" --stacktrace
-          
-            # Pick first JAR and strip leading $PWD/
-            FILE=$(find build/libs -maxdepth 1 -type f -name '*.jar' | head -n1)
-            if [ -z "$FILE" ]; then
-            echo "No JARs found in build/libs" >&2
-            exit 1
-            fi
-            echo "file=$FILE" >> "$GITHUB_OUTPUT"
-
       # ---- Optional: Publish to Modrinth via their action (recommended) ----
       # Requires: secrets.MODRINTH_TOKEN and you provide the correct fields below.
       # Comment out this step if you still want to keep Gradle Minotaur.
@@ -99,7 +99,7 @@ jobs:
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
           project: ${{ vars.MODRINTH_PROJECT_ID }}
-          version: ${{ vars.MINECRAFT_VERSION }} - ${{ github.event.inputs.version }}
+          version: ${{ env.CURRENT_TAG }}
           changelog: ${{ steps.changelog.outputs.changelog }}
           game-versions: ${{ vars.MINECRAFT_VERSION }}
           files: ${{ steps.build.outputs.file }}
