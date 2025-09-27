@@ -82,9 +82,9 @@ jobs:
         id: build
         run: |
             ./gradlew remapJar -PcurrentTag="${CURRENT_TAG}" -PlastTag="${LAST_TAG}" --stacktrace
-
-            # Find first JAR in build/libs, convert to absolute path
-            FILE=$(find "$(pwd)/build/libs" -maxdepth 1 -type f -name '*.jar' | head -n1)
+          
+            # Pick first JAR and strip leading $PWD/
+            FILE=$(find build/libs -maxdepth 1 -type f -name '*.jar' | head -n1)
             if [ -z "$FILE" ]; then
             echo "No JARs found in build/libs" >&2
             exit 1
