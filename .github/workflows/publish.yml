@@ -1,33 +1,131 @@
+name: Release
+
 on:
   workflow_dispatch:
     inputs:
       previousVersion:
-        description: 'Previous Version (Do not include v prefix, must be same as the last version tag! Example: 1.4.1)'
+        description: 'Previous Version (no v prefix; must equal last tag, e.g. 1.4.1)'
         required: true
       version:
-        description: 'Version (Do not include v prefix! Example: 1.4.2)'
+        description: 'Version (no v prefix; e.g. 1.4.2)'
         required: true
+
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # required for gh release create/upload with GITHUB_TOKEN
+    env:
+      LAST_TAG: v${{ github.event.inputs.previousVersion }}
+      CURRENT_TAG: v${{ github.event.inputs.version }}
+
     steps:
-      - uses: actions/checkout@main
-      - name: Fetch tags
-        run: git fetch --tags
-      - name: Set up JDK 21
-        uses: actions/setup-java@v1
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
+          fetch-depth: 0  # we need history for changelog
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
           java-version: 21
-      - name: Upload to websites
-        run: ./gradlew publishThirdParty --stacktrace -PlastTag="v${{ github.event.inputs.previousVersion }}" -PcurrentTag="v${{ github.event.inputs.version }}"
-        if: |
-          !contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.pull_request.title, '[ci skip]')
-        env:
-          modrinth_token: ${{ secrets.MODRINTH_TOKEN }}
-          github_token: ${{ secrets.GH_API_KEY }}
-          USERNAME: ${{ secrets.GH_USERNAME }}
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Capture build artifacts
+
+      - name: Compute release type vars
+        id: rel
+        run: |
+          TAG="${CURRENT_TAG}"
+
+          # default
+          RELEASE_TYPE="stable"
+          PRERELEASE_FLAG=""
+
+          case "$TAG" in
+            *-alpha*) RELEASE_TYPE="alpha"; PRERELEASE_FLAG="--prerelease" ;;
+            *-beta*)  RELEASE_TYPE="beta";  PRERELEASE_FLAG="--prerelease" ;;
+            *-pre*)   RELEASE_TYPE="pre";   PRERELEASE_FLAG="--prerelease" ;;
+            *-rc*)    RELEASE_TYPE="rc";    PRERELEASE_FLAG="--prerelease" ;;
+          esac
+
+          echo "release_type=$RELEASE_TYPE" >> "$GITHUB_OUTPUT"
+          echo "prerelease_flag=$PRERELEASE_FLAG" >> "$GITHUB_OUTPUT"
+
+      - name: Generate changelog (lines starting with '- ')
+        id: changelog
+        run: |
+          set -euo pipefail
+          # safety if tags missing remotely
+          git fetch --tags
+
+          # Extract commit bodies between tags, keep only bullet lines "- ..."
+          # Limit depth similar to your script; adjust if needed
+          MAX_COMMITS=${{ vars.CHANGELOG_MAX_COMMIT_SEARCH || 256 }}
+          git log --max-count="${MAX_COMMITS}" --pretty=format:"%b" "${LAST_TAG}..${CURRENT_TAG}" \
+            | sed 's/^"//; s/"$//' \
+            | awk '/^- / {print}' > CHANGELOG_GH.txt
+
+          # Fallback if empty
+          if [ ! -s CHANGELOG_GH.txt ]; then
+            echo "No Changelog Available" > CHANGELOG_GH.txt
+          fi
+
+          echo "changelog<<EOF" >> "$GITHUB_OUTPUT"
+          cat CHANGELOG_GH.txt >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Build with Gradle
+        run: |
+          ./gradlew --version
+          ./gradlew build -PcurrentTag="${CURRENT_TAG}" -PlastTag="${LAST_TAG}" --stacktrace
+
+      # ---- Optional: Publish to Modrinth via their action (recommended) ----
+      # Requires: secrets.MODRINTH_TOKEN and you provide the correct fields below.
+      # Comment out this step if you still want to keep Gradle Minotaur.
+      - name: Publish to Modrinth
+        if: ${{ always() }}  # run even if GitHub Release fails; adjust as you like
+        uses: modrinth/action-publish@v2
+        with:
+          token: ${{ secrets.MODRINTH_TOKEN }}
+          project_id: ${{ vars.MODRINTH_PROJECT_ID }}    # set in repo variables
+          version_number: ${{ env.CURRENT_TAG }}
+          version_name: "${{ env.CURRENT_TAG }}"
+          changelog: ${{ steps.changelog.outputs.changelog }}
+          game_versions: '["${{ vars.MINECRAFT_VERSION }}"]'
+          loaders: '["fabric","quilt"]'
+          files: |
+            build/libs/*.jar
+
+      - name: Create or update GitHub Release
+        run: |
+          set -euo pipefail
+          # Create (or edit if exists)
+          if gh release view "${CURRENT_TAG}" >/dev/null 2>&1; then
+            echo "Release exists; editing title/notes..."
+            gh release edit "${CURRENT_TAG}" \
+              --title "${{ github.repository }} ${{ env.CURRENT_TAG }}" \
+              --notes-file CHANGELOG_GH.txt \
+              --target "${GITHUB_SHA}" \
+              ${{ steps.rel.outputs.prerelease_flag }}
+          else
+            echo "Creating release..."
+            gh release create "${CURRENT_TAG}" \
+              --title "${{ github.repository }} ${{ env.CURRENT_TAG }}" \
+              --notes-file CHANGELOG_GH.txt \
+              --target "${GITHUB_SHA}" \
+              ${{ steps.rel.outputs.prerelease_flag }}
+          fi
+
+      - name: Upload artifacts to Release (clobber)
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          FILES=(build/libs/*.jar)
+          if [ ${#FILES[@]} -eq 0 ]; then
+            echo "No JARs found to upload."; exit 1
+          fi
+          gh release upload "${CURRENT_TAG}" "${FILES[@]}" --clobber
+
+      - name: Upload build artifacts (CI archive)
         uses: actions/upload-artifact@v4
         with:
           name: Artifacts
