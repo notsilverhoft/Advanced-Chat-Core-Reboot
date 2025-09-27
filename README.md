@@ -1,6 +1,6 @@
-# Important
+> [!IMPORTANT]
+> This library will be updated to major minecraft versions only in the future.
 
-I have no real interest in mod development at the moment, so I am archiving this. Feel free to fork, and consider some of the community forks/
 
 # AdvancedChatCore
 
