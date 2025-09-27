@@ -83,18 +83,18 @@ jobs:
       # Comment out this step if you still want to keep Gradle Minotaur.
       - name: Publish to Modrinth
         if: ${{ always() }}  # run even if GitHub Release fails; adjust as you like
-        uses: modrinth/action-publish@v2
+        uses: cloudnode-pro/modrinth-publish@v2.1.3
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
-          project_id: ${{ vars.MODRINTH_PROJECT_ID }}    # set in repo variables
-          version_number: ${{ env.CURRENT_TAG }}
-          version_name: "${{ env.CURRENT_TAG }}"
+          project: ${{ vars.MODRINTH_PROJECT_ID }}
+          version: ${{ env.CURRENT_TAG }}
           changelog: ${{ steps.changelog.outputs.changelog }}
-          game_versions: '["${{ vars.MINECRAFT_VERSION }}"]'
-          loaders: '["fabric","quilt"]'
+          game-versions: ${{ vars.MINECRAFT_VERSION }}
+          loaders: |-
+            fabric
+            quilt
           files: |
             build/libs/*.jar
-
       - name: Create or update GitHub Release
         run: |
           set -euo pipefail
