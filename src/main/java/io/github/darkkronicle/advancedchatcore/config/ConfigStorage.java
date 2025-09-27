@@ -337,11 +337,11 @@ public class ConfigStorage implements IConfigHandler {
     }
 
     public static void readOptions(
-            JsonObject root, String category, List<SaveableConfig<?>> options) {
+            JsonObject root, String category, ImmutableList<SaveableConfig<? extends IConfigBase>> options) {
         JsonObject obj = JsonUtils.getNestedObject(root, category, false);
 
         if (obj != null) {
-            for (SaveableConfig<?> conf : options) {
+            for (SaveableConfig<? extends IConfigBase> conf : options) {
                 IConfigBase option = conf.config;
                 if (obj.has(conf.key)) {
                     option.setValueFromJsonElement(obj.get(conf.key));
@@ -415,10 +415,10 @@ public class ConfigStorage implements IConfigHandler {
     }
 
     public static void writeOptions(
-            JsonObject root, String category, List<SaveableConfig<?>> options) {
+            JsonObject root, String category, ImmutableList<SaveableConfig<? extends IConfigBase>> options) {
         JsonObject obj = JsonUtils.getNestedObject(root, category, true);
 
-        for (SaveableConfig<?> option : options) {
+        for (SaveableConfig<? extends IConfigBase> option : options) {
             obj.add(option.key, option.config.getAsJsonElement());
         }
     }
