@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write   # required for gh release create/upload with GITHUB_TOKEN
+      packages: write
     env:
       LAST_TAG: v${{ github.event.inputs.previousVersion }}
       CURRENT_TAG: v${{ github.event.inputs.version }}
@@ -133,6 +134,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${CURRENT_TAG}" "${{ steps.build.outputs.file }}" --clobber
+
+      - name: Publish to GitHub Packages (Maven)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: |
+          VERSION_NO_V="${{ github.event.inputs.version }}"
+          ./gradlew publish -PprojectVersion="${VERSION_NO_V}" --stacktrace
 
       - name: Upload build artifacts (CI archive)
         uses: actions/upload-artifact@v4
