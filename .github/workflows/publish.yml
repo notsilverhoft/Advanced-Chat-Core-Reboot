@@ -81,12 +81,12 @@ jobs:
       - name: Build with Gradle
         run: |
             ./gradlew remapJar -PcurrentTag="${CURRENT_TAG}" -PlastTag="${LAST_TAG}" --stacktrace
+            ls -lah build/libs/
 
       # ---- Optional: Publish to Modrinth via their action (recommended) ----
       # Requires: secrets.MODRINTH_TOKEN and you provide the correct fields below.
       # Comment out this step if you still want to keep Gradle Minotaur.
       - name: Publish to Modrinth
-        if: ${{ always() }}  # run even if GitHub Release fails; adjust as you like
         uses: cloudnode-pro/modrinth-publish@v2.1.3
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
