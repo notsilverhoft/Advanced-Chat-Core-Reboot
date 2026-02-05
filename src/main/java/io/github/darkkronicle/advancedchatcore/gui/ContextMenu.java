@@ -7,6 +7,7 @@ import io.github.darkkronicle.advancedchatcore.util.TextUtil;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 
@@ -64,8 +65,8 @@ public class ContextMenu extends WidgetBase {
     }
 
     @Override
-    public boolean onMouseClicked(int mouseX, int mouseY, int mouseButton) {
-        boolean success = super.onMouseClicked(mouseX, mouseY, mouseButton);
+    public boolean onMouseClicked(Click click, boolean propagated) {
+        boolean success = super.onMouseClicked(click, propagated);
         if (success) {
             return true;
         }
@@ -75,8 +76,8 @@ public class ContextMenu extends WidgetBase {
     }
 
     @Override
-    protected boolean onMouseClickedImpl(int mouseX, int mouseY, int mouseButton) {
-        if (mouseButton != 0) {
+    protected boolean onMouseClickedImpl(Click click, boolean propagated) {
+        if (click.button() != 0) {
             return false;
         }
         if (hoveredEntry == null) {

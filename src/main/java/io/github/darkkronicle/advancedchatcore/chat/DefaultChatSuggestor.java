@@ -11,8 +11,11 @@ import io.github.darkkronicle.advancedchatcore.interfaces.AdvancedChatScreenSect
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ChatInputSuggestor;
+import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.input.MouseInput;
 
 /**
  * Handles the CommandSuggestor for the chat
@@ -34,7 +37,8 @@ public class DefaultChatSuggestor extends AdvancedChatScreenSection {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return this.commandSuggestor.keyPressed(keyCode, scanCode, modifiers);
+        KeyInput keyInput = new KeyInput(keyCode, scanCode, modifiers);
+        return this.commandSuggestor.keyPressed(keyInput);
     }
 
     @Override
@@ -54,7 +58,9 @@ public class DefaultChatSuggestor extends AdvancedChatScreenSection {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        return this.commandSuggestor.mouseClicked(mouseX, mouseY, button);
+        MouseInput mouseInput = new MouseInput(button, 0);
+        Click click = new Click(mouseX, mouseY, mouseInput);
+        return this.commandSuggestor.mouseClicked(click);
     }
 
     @Override
@@ -80,5 +86,4 @@ public class DefaultChatSuggestor extends AdvancedChatScreenSection {
                         -805306368);
         this.commandSuggestor.refresh();
     }
-
 }

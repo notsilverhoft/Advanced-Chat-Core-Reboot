@@ -1,13 +1,17 @@
 plugins {
-    id 'fabric-loom' version '1.11-SNAPSHOT'
+    id 'fabric-loom' version '1.14.7'
     id 'maven-publish'
     id "io.freefair.lombok" version "8.10"
 }
 
-sourceCompatibility = JavaVersion.VERSION_21
-targetCompatibility = JavaVersion.VERSION_21
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
 
-archivesBaseName = project.archives_base_name
+base {
+    archivesName = project.archives_base_name
+}
 version = "${project.minecraft_version}-${project.mod_version}"
 group = project.maven_group
 
@@ -34,7 +38,7 @@ dependencies {
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-    modImplementation("com.github.sakura-ryoko:malilib:${project.minecraft_version}-${project.malilib_version}")
+   modImplementation files("libs/malilib-fabric-1.21.10-0.26.8.jar")
     modCompileOnly "com.terraformersmc:modmenu:5.0.1"
 
     implementation "com.github.DarkKronicle.Konstruct:addons:${project.konstruct_version}"

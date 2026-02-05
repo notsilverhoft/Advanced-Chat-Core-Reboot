@@ -8,21 +8,25 @@
 package io.github.darkkronicle.advancedchatcore.chat;
 
 import fi.dy.masa.malilib.util.KeyCodes;
+import net.minecraft.client.gui.Click;
+import net.minecraft.client.input.KeyInput;
 import io.github.darkkronicle.advancedchatcore.config.ConfigStorage;
 import io.github.darkkronicle.advancedchatcore.util.StringMatch;
 import io.github.darkkronicle.advancedchatcore.util.StyleFormatter;
 import io.github.darkkronicle.advancedchatcore.util.TextBuilder;
 import io.github.darkkronicle.advancedchatcore.util.TextUtil;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,7 +81,6 @@ public class AdvancedTextField extends TextFieldWidget {
         focusedTicks++;
     }
 
-    @Override
     public void setRenderTextProvider(BiFunction<String, Integer, OrderedText> renderTextProvider) {
         this.renderTextProvider = renderTextProvider;
     }
@@ -90,7 +93,34 @@ public class AdvancedTextField extends TextFieldWidget {
 
     public static boolean isUndo(int code) {
         // Undo (Ctrl + Z)
-        return code == KeyCodes.KEY_Z && Screen.hasControlDown() && !Screen.hasAltDown();
+        return code == KeyCodes.KEY_Z && isControlDown() && !isAltDown();
+    }
+    
+    // Helper method to check if Control key is down
+    private static boolean isControlDown() {
+        long handle = MinecraftClient.getInstance().getWindow().getHandle();
+        String osName = System.getProperty("os.name").toLowerCase();
+        boolean isMac = osName.contains("mac") || osName.contains("darwin");
+        if (isMac) {
+            return GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_LEFT_SUPER) == GLFW.GLFW_PRESS 
+                || GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_RIGHT_SUPER) == GLFW.GLFW_PRESS;
+        }
+        return GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS 
+            || GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
+    }
+
+    // Helper method to check if Alt key is down
+    private static boolean isAltDown() {
+        long handle = MinecraftClient.getInstance().getWindow().getHandle();
+        return GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_LEFT_ALT) == GLFW.GLFW_PRESS 
+            || GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_RIGHT_ALT) == GLFW.GLFW_PRESS;
+    }
+    
+    // Helper method to check if Shift key is down
+    private static boolean isShiftDown() {
+        long handle = MinecraftClient.getInstance().getWindow().getHandle();
+        return GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS 
+            || GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
     }
 
     /**
@@ -142,13 +172,15 @@ public class AdvancedTextField extends TextFieldWidget {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-
+    public boolean mouseClicked(Click click, boolean doubled) {
+        double mouseX = click.x();
+        double mouseY = click.y();
+        
         int renderY = getY() - (renderLines.size() - 1) * (textRenderer.fontHeight + 2);
         if (mouseY < renderY - 2 || mouseY > getY() + height + 2 || mouseX < getX() - 2 || mouseX > getX() + width + 4) {
             return false;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(click, doubled);
     }
 
     @Override
@@ -351,14 +383,15 @@ public class AdvancedTextField extends TextFieldWidget {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyInput keyInput) {
         if (!this.isActive()) {
             return false;
         }
+        int keyCode = keyInput.key();
         if (!isUndo(keyCode)) {
-            return super.keyPressed(keyCode, scanCode, modifiers);
+            return super.keyPressed(keyInput);
         }
-        if (Screen.hasShiftDown()) {
+        if (isShiftDown()) {
             redo();
         } else {
             undo();
