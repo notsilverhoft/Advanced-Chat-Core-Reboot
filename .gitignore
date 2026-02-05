@@ -12,3 +12,4 @@ classes/
 lombok.config
 extra.properties
 swear_words.csv
+.history
