@@ -46,7 +46,7 @@ public abstract class WidgetConfigList<TYPE, WIDGET extends WidgetConfigListEntr
 
     protected void clearTextFieldFocus() {
         for (TextFieldWrapper<GuiTextFieldGeneric> field : this.textFields) {
-            GuiTextFieldGeneric textField = field.getTextField();
+            GuiTextFieldGeneric textField = field.textField();
             if (textField.isFocused()) {
                 textField.setFocused(false);
                 break;

@@ -1,5 +1,6 @@
 package io.github.darkkronicle.advancedchatcore.gui;
 
+import fi.dy.masa.malilib.render.GuiContext;
 import fi.dy.masa.malilib.render.RenderUtils;
 import io.github.darkkronicle.advancedchatcore.util.Color;
 import io.github.darkkronicle.advancedchatcore.util.Colors;
@@ -7,7 +8,6 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
@@ -59,7 +59,7 @@ public class IconButton extends CleanButton {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, boolean unused) {
+    public void render(GuiContext context, int mouseX, int mouseY, boolean unused) {
         int relMX = mouseX - x;
         int relMY = mouseY - y;
         hovered = relMX >= 0 && relMX <= width && relMY >= 0 && relMY <= height;
@@ -82,7 +82,7 @@ public class IconButton extends CleanButton {
 
     @Override
     protected boolean onMouseClickedImpl(Click click, boolean propagated) {
-        this.mc.getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+        this.mc.getSoundManager().play(PositionedSoundInstance.ui(SoundEvents.UI_BUTTON_CLICK, 1.0F));
         onClick.accept(this);
         return true;
     }

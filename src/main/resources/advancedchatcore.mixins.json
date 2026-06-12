@@ -9,9 +9,7 @@
     "MixinChatHud",
     "MixinChatHudInvoker",
     "MixinChatScreen",
-    "MixinKeyboard",
     "MixinMinecraftClient",
-    "MixinSleepingChatScreen",
     "MixinMessageIndicator"
   ],
   "injectors": {

@@ -1,6 +1,7 @@
 package io.github.darkkronicle.advancedchatcore.gui;
 
 import fi.dy.masa.malilib.gui.widgets.WidgetBase;
+import fi.dy.masa.malilib.render.GuiContext;
 import fi.dy.masa.malilib.render.RenderUtils;
 import io.github.darkkronicle.advancedchatcore.util.Color;
 import io.github.darkkronicle.advancedchatcore.util.TextUtil;
@@ -8,7 +9,6 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 
 import java.util.LinkedHashMap;
@@ -89,7 +89,7 @@ public class ContextMenu extends WidgetBase {
     }
 
     @Override
-    public void render(DrawContext drawContext, int mouseX, int mouseY, boolean selected) {
+    public void render(GuiContext drawContext, int mouseX, int mouseY, boolean selected) {
         drawRect(drawContext, x, y, width, height, background.color());
         int rX = x + 2;
         int rY = y + 2;
@@ -104,7 +104,7 @@ public class ContextMenu extends WidgetBase {
         }
     }
 
-    private static void drawRect(DrawContext drawContext, int x, int y, int width, int height, int color) {
+    private static void drawRect(GuiContext drawContext, int x, int y, int width, int height, int color) {
         drawContext.fill(x, y, x + width, y + height, color);
     }
 

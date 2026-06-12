@@ -11,6 +11,7 @@ import fi.dy.masa.malilib.gui.GuiTextFieldGeneric;
 import fi.dy.masa.malilib.gui.widgets.WidgetBase;
 import fi.dy.masa.malilib.gui.widgets.WidgetListEntryBase;
 import fi.dy.masa.malilib.gui.wrappers.TextFieldWrapper;
+import fi.dy.masa.malilib.render.GuiContext;
 import fi.dy.masa.malilib.render.RenderUtils;
 import io.github.darkkronicle.advancedchatcore.util.Colors;
 import lombok.Getter;
@@ -18,7 +19,6 @@ import lombok.Setter;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.input.CharInput;
 import net.minecraft.client.input.KeyInput;
 
@@ -66,7 +66,7 @@ public abstract class WidgetConfigListEntry<TYPE> extends WidgetListEntryBase<TY
     }
 
     @Override
-    public void render(DrawContext drawContext, int mouseX, int mouseY, boolean selected) {
+    public void render(GuiContext drawContext, int mouseX, int mouseY, boolean selected) {
         // Draw a lighter background for the hovered and the selected entry
         if (selected || this.isMouseOver(mouseX, mouseY)) {
             RenderUtils.drawRect(
@@ -102,7 +102,7 @@ public abstract class WidgetConfigListEntry<TYPE> extends WidgetListEntryBase<TY
      * Render's in the middle of the rendering cycle. After the background, but before it goes to
      * super.
      */
-    public void renderEntry(int mouseX, int mouseY, boolean selected, DrawContext drawContext) {
+    public void renderEntry(int mouseX, int mouseY, boolean selected, GuiContext drawContext) {
         String name = getName();
         this.drawString(drawContext,
                 this.x + 4,
@@ -112,7 +112,7 @@ public abstract class WidgetConfigListEntry<TYPE> extends WidgetListEntryBase<TY
     }
 
     @Override
-    public void postRenderHovered(DrawContext drawContext, int mouseX, int mouseY, boolean selected) {
+    public void postRenderHovered(GuiContext drawContext, int mouseX, int mouseY, boolean selected) {
         super.postRenderHovered(drawContext, mouseX, mouseY, selected);
 
         if (hoverLines == null) {
@@ -166,7 +166,7 @@ public abstract class WidgetConfigListEntry<TYPE> extends WidgetListEntryBase<TY
         if (getTextFields() != null) {
             for (TextFieldWrapper<GuiTextFieldGeneric> field : getTextFields()) {
                 if (field != null) {
-                    ret = field.getTextField().mouseClicked(click, propagated);
+                    ret = field.textField().mouseClicked(click, propagated);
                 }
             }
         }
@@ -182,12 +182,12 @@ public abstract class WidgetConfigListEntry<TYPE> extends WidgetListEntryBase<TY
         return ret;
     }
 
-    protected void drawTextFields(int mouseX, int mouseY, DrawContext drawContext) {
+    protected void drawTextFields(int mouseX, int mouseY, GuiContext drawContext) {
         if (getTextFields() == null) {
             return;
         }
         for (TextFieldWrapper<GuiTextFieldGeneric> field : getTextFields()) {
-            field.getTextField().render(drawContext, mouseX, mouseY, 0f);
+            field.textField().render(drawContext, mouseX, mouseY, 0f);
         }
     }
 }

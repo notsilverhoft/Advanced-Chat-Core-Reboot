@@ -22,11 +22,14 @@ import io.github.darkkronicle.advancedchatcore.util.Color;
 import io.github.darkkronicle.advancedchatcore.util.RowList;
 import lombok.Getter;
 import net.minecraft.client.MinecraftClient;
+import fi.dy.masa.malilib.render.GuiContext;
+import net.minecraft.client.font.DrawnTextConsumer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.MutableText;
+import net.minecraft.text.ClickEvent;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -200,10 +203,10 @@ public class AdvancedChatScreen extends GuiBase {
     }
 
     @Override
-    public void resize(MinecraftClient client, int width, int height) {
-        String string = this.chatField.getText();
-        this.init(client, width, height);
-        this.setText(string);
+    public void resize(int width, int height) {
+        String savedText = this.chatField.getText();
+        super.resize(width, height);
+        this.setText(savedText);
         for (AdvancedChatScreenSection section : sections) {
             section.resize(width, height);
         }
@@ -329,24 +332,30 @@ public class AdvancedChatScreen extends GuiBase {
         double mouseX = click.x();
         double mouseY = click.y();
         int button = click.button();
-        
+
         for (AdvancedChatScreenSection section : sections) {
             if (section.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
         }
-        ChatHud hud = client.inGameHud.getChatHud();
-        if (hud.mouseClicked(mouseX, mouseY)) {
-            return true;
-        }
-        Style style = hud.getTextStyleAt(mouseX, mouseY);
-        if (style != null && style.getClickEvent() != null) {
-            if (this.handleTextClick(style)) {
+        if (button == 0) {
+            ChatHud hud = client.inGameHud.getChatHud();
+            DrawnTextConsumer.ClickHandler clickHandler = new DrawnTextConsumer.ClickHandler(
+                    this.textRenderer, (int) mouseX, (int) mouseY).insert(isShiftDown());
+            hud.render(clickHandler, this.client.getWindow().getScaledHeight(),
+                    this.client.inGameHud.getTicks(), true);
+            Style style = clickHandler.getStyle();
+            if (style != null && style.getClickEvent() != null) {
+                handleClickEvent(style.getClickEvent(), this.client, this);
                 return true;
             }
         }
         return (this.chatField.mouseClicked(click, doubled)
                 || super.onMouseClicked(click, doubled));
+    }
+
+    public void fireClickEvent(ClickEvent event) {
+        handleClickEvent(event, this.client, this);
     }
 
     @Override
@@ -414,7 +423,7 @@ public class AdvancedChatScreen extends GuiBase {
     @Override
     public void render(DrawContext drawContext, int mouseX, int mouseY, float partialTicks) {
         ChatHud hud = client.inGameHud.getChatHud();
-        hud.render(drawContext, 0, mouseX, mouseY, true);
+        hud.render(drawContext, this.textRenderer, this.client.inGameHud.getTicks(), mouseX, mouseY, true, isShiftDown());
         this.setFocused(this.chatField);
         this.chatField.setFocused(true);
         this.chatField.render(drawContext, mouseX, mouseY, partialTicks);
@@ -422,14 +431,16 @@ public class AdvancedChatScreen extends GuiBase {
         for (AdvancedChatScreenSection section : sections) {
             section.render(drawContext, mouseX, mouseY, partialTicks);
         }
-        Style style = hud.getTextStyleAt(mouseX, mouseY);
+        DrawnTextConsumer.ClickHandler hoverHandler = new DrawnTextConsumer.ClickHandler(this.textRenderer, mouseX, mouseY);
+        hud.render(hoverHandler, this.client.getWindow().getScaledHeight(), this.client.inGameHud.getTicks(), true);
+        Style style = hoverHandler.getStyle();
         if (style != null && style.getHoverEvent() != null) {
             drawContext.drawHoverEvent(textRenderer, style, mouseX, mouseY);
         }
     }
 
     @Override
-    protected void drawScreenBackground(DrawContext drawContext, int mouseX, int mouseY) {
+    protected void drawScreenBackground(GuiContext drawContext, int mouseX, int mouseY) {
 
     }
 
